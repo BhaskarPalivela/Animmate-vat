@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080b14">
+    <title>AnimMate Studio — AI Animation Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#080b14] p-5 text-slate-100 sm:p-8">
+    <main class="mx-auto max-w-6xl">
+        <header class="mb-9 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <p class="mb-2 text-xs font-bold uppercase tracking-[0.28em] text-violet-300">Local AI animation studio</p>
+                <h1 class="text-4xl font-black tracking-tight sm:text-5xl">
+                    AnimMate <span class="bg-gradient-to-r from-violet-400 to-pink-400 bg-clip-text text-transparent">Studio</span>
+                </h1>
+                <p class="mt-3 max-w-xl text-sm leading-6 text-slate-400">Turn an idea into a 12-scene storyboard, then bring it to life on stage.</p>
+            </div>
+            <div class="flex items-center gap-2 self-start rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-xs text-emerald-300 sm:self-auto">
+                <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+                Powered by local Ollama
+            </div>
+        </header>
+
+        <section class="mb-6 rounded-2xl border border-white/10 bg-slate-900/80 p-5 shadow-2xl shadow-black/20 sm:p-6">
+            <label for="userPrompt" class="mb-3 block text-sm font-semibold text-slate-200">What should we animate?</label>
+            <form id="promptForm" class="flex flex-col gap-3 sm:flex-row">
+                <input
+                    id="userPrompt"
+                    name="prompt"
+                    type="text"
+                    maxlength="2000"
+                    required
+                    placeholder="A tiny astronaut discovers a garden on the moon..."
+                    class="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#080b14] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20"
+                >
+                <button
+                    id="generateBtn"
+                    type="submit"
+                    class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-violet-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:cursor-wait disabled:opacity-60"
+                >
+                    <span id="generateLabel">Generate storyboard</span>
+                </button>
+            </form>
+            <p id="statusMessage" role="status" aria-live="polite" class="mt-3 min-h-5 text-sm text-slate-400"></p>
+        </section>
+
+        <section class="grid gap-5 lg:grid-cols-2" aria-label="Storyboard and animation preview">
+            <article class="rounded-2xl border border-white/10 bg-slate-900/80 p-5 shadow-xl shadow-black/10 sm:p-6">
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-[0.2em] text-violet-300">01 / Storyboard</p>
+                        <h2 class="mt-1 text-lg font-bold">Your script</h2>
+                    </div>
+                    <span id="sceneCount" class="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-400">No scenes yet</span>
+                </div>
+                <pre id="scriptOutput" class="min-h-80 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-white/5 bg-[#080b14] p-4 font-mono text-xs leading-6 text-emerald-300"><span class="text-slate-500">Your generated JSON storyboard will appear here.</span></pre>
+            </article>
+
+            <article class="rounded-2xl border border-white/10 bg-slate-900/80 p-5 shadow-xl shadow-black/10 sm:p-6">
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-[0.2em] text-pink-300">02 / Preview</p>
+                        <h2 class="mt-1 text-lg font-bold">Animation stage</h2>
+                    </div>
+                    <span id="stageStatus" class="text-xs text-slate-500">Ready when you are</span>
+                </div>
+                <div id="stage" class="relative flex min-h-80 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-indigo-950 via-slate-950 to-[#080b14] transition-colors duration-700">
+                    <div class="pointer-events-none absolute inset-0 opacity-30" style="background-image: radial-gradient(#c4b5fd 0.7px, transparent 0.7px); background-size: 22px 22px;"></div>
+                    <p id="stagePlaceholder" class="relative text-sm text-slate-500">Your story will appear here</p>
+                    <div id="actor" aria-label="Animated character" class="absolute z-10 flex h-20 w-20 items-center justify-center rounded-3xl border border-white/20 bg-violet-500/20 text-5xl opacity-0 shadow-lg shadow-violet-500/20 transition-all duration-700">🤖</div>
+                    <div id="dialogueBox" class="absolute bottom-5 left-4 right-4 z-20 mx-auto max-w-md rounded-xl border border-white/10 bg-slate-950/90 px-4 py-3 text-center text-sm text-amber-200 opacity-0 shadow-xl transition-opacity duration-300"></div>
+                </div>
+                <button
+                    id="playBtn"
+                    type="button"
+                    disabled
+                    class="mt-4 w-full rounded-xl bg-emerald-500/90 px-4 py-3 text-sm font-bold text-slate-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+                >▶ <span id="playLabel">Play animation</span></button>
+            </article>
+        </section>
+        <footer class="py-7 text-center text-xs text-slate-600">Your ideas stay on your machine with local Ollama and ChromaDB.</footer>
+    </main>
+
+    <script>
+        const promptForm = document.getElementById('promptForm');
+        const promptInput = document.getElementById('userPrompt');
+        const generateBtn = document.getElementById('generateBtn');
+        const generateLabel = document.getElementById('generateLabel');
+        const statusMessage = document.getElementById('statusMessage');
+        const scriptOutput = document.getElementById('scriptOutput');
+        const sceneCount = document.getElementById('sceneCount');
+        const playBtn = document.getElementById('playBtn');
+        const playLabel = document.getElementById('playLabel');
+        const stage = document.getElementById('stage');
+        const stageStatus = document.getElementById('stageStatus');
+        const stagePlaceholder = document.getElementById('stagePlaceholder');
+        const actor = document.getElementById('actor');
+        const dialogueBox = document.getElementById('dialogueBox');
+        let currentScript = null;
+        let isPlaying = false;
+
+        function setStatus(message, isError = false) {
+            statusMessage.textContent = message;
+            statusMessage.className = `mt-3 min-h-5 text-sm ${isError ? 'text-rose-300' : 'text-slate-400'}`;
+        }
+
+        promptForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                setStatus('Enter an animation idea to get started.', true);
+                promptInput.focus();
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateLabel.textContent = 'Creating storyboard...';
+            setStatus('Asking your local animation director...');
+            playBtn.disabled = true;
+            currentScript = null;
+            scriptOutput.textContent = 'Generating storyboard...';
+            sceneCount.textContent = 'No scenes yet';
+            stageStatus.textContent = 'Ready when you are';
+            stage.style.backgroundImage = '';
+            stagePlaceholder.classList.remove('hidden');
+            actor.style.opacity = '0';
+            actor.style.transform = 'translate(0, 0) scale(1)';
+            dialogueBox.style.opacity = '0';
+
+            try {
+                const response = await fetch('/generate-animation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.detail || `Request failed (${response.status})`);
+                }
+                if (!result || typeof result.title !== 'string' || !Array.isArray(result.scenes) || result.scenes.length < 10 || result.scenes.length > 15) {
+                    throw new Error('The server returned an invalid storyboard.');
+                }
+
+                currentScript = result;
+                scriptOutput.textContent = JSON.stringify(result, null, 2);
+                sceneCount.textContent = `${result.scenes.length} scenes`;
+                stagePlaceholder.classList.add('hidden');
+                setStatus('Storyboard ready. Press play to preview it.');
+                playBtn.disabled = false;
+            } catch (error) {
+                scriptOutput.textContent = 'Storyboard generation failed.';
+                sceneCount.textContent = 'No scenes yet';
+                setStatus(`Could not generate storyboard: ${error.message}`, true);
+            } finally {
+                generateBtn.disabled = false;
+                generateLabel.textContent = 'Generate storyboard';
+            }
+        });
+
+        function backgroundFor(theme) {
+            const value = String(theme).toLowerCase();
+            if (/night|dark|space|moon/.test(value)) return 'linear-gradient(135deg, #020617, #172554, #312e81)';
+            if (/forest|green|garden|nature/.test(value)) return 'linear-gradient(135deg, #052e16, #14532d, #064e3b)';
+            if (/sunset|orange|desert|fire/.test(value)) return 'linear-gradient(135deg, #431407, #9a3412, #7c2d12)';
+            if (/ocean|blue|water|sea/.test(value)) return 'linear-gradient(135deg, #082f49, #075985, #164e63)';
+            return 'linear-gradient(135deg, #1e1b4b, #312e81, #4c1d95)';
+        }
+
+        function wait(milliseconds) {
+            return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+        }
+
+        playBtn.addEventListener('click', async () => {
+            if (!currentScript || isPlaying) return;
+            isPlaying = true;
+            playBtn.disabled = true;
+            playLabel.textContent = 'Playing...';
+            stagePlaceholder.classList.add('hidden');
+            actor.style.opacity = '1';
+
+            try {
+                for (const [index, scene] of currentScript.scenes.entries()) {
+                    stage.style.backgroundImage = backgroundFor(scene.background);
+                    stageStatus.textContent = `Scene ${index + 1} of ${currentScript.scenes.length}`;
+                    dialogueBox.textContent = scene.dialogue || '';
+                    dialogueBox.style.opacity = scene.dialogue ? '1' : '0';
+
+                    if (scene.action === 'move_right') {
+                        actor.style.transform = 'translateX(100px)';
+                    } else if (scene.action === 'bounce') {
+                        actor.style.transform = 'translateY(-42px)';
+                    } else {
+                        actor.style.transform = 'scale(1.2)';
+                    }
+
+                    await wait(2000);
+                    actor.style.transform = 'translate(0, 0) scale(1)';
+                    dialogueBox.style.opacity = '0';
+                    await wait(400);
+                }
+                stageStatus.textContent = 'Animation complete';
+            } finally {
+                isPlaying = false;
+                playBtn.disabled = !currentScript;
+                playLabel.textContent = 'Play animation';
+            }
+        });
+    </script>
+</body>
+</html>
