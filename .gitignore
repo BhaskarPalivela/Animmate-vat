@@ -1,4 +1,7 @@
-.venv*/
+.venv/
+venv/
+venv313/
 __pycache__/
 *.py[cod]
+.env
 chroma_db/
